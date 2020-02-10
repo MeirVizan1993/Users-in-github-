@@ -1,0 +1,203 @@
+<%- include("header") -%>
+<div class="container">
+    <a href="/login"><button type="button" class="btn btn-outline-primary">Logout</button></a>
+    <!--the input of users and element of button and input-->
+    <div class="row">
+        <div class="col-lg-12">
+            <h1>Github search</h1>
+            <h6>User Name</h6>
+            <input id="input" type="text" style="width: 100%" placeholder="Add new item" name="name"><br>
+            <button type="button" id="search_btn" class="btn btn-primary">Search</button>
+            <button type="button" id="save_btn" class="btn btn-success bt">Save</button>
+            <button type="button" id="delete_btn" class="btn btn-danger bt">Delete</button>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <!-- result of search -->
+        <div id="res_search" class="col-sm-12 col-md-6 col-lg-6">
+            <div class="jumbotron" id="search_result"></div>
+        </div>
+
+
+        <!-- result of saved -->
+        <div class="col-sm-12 col-md-6 col-lg-6">
+            <div  class="jumbotron">
+                <div id="saved_result" class="alert alert-primary"> Saved </div>
+                <ol id="saved_user"></ol>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<script>
+    document.getElementById('res_search').style.display = 'none';
+    //get the users from database by get method
+    async function f() {
+        const response = await fetch('/users', {method: "GET", headers: {'Content-Type': 'application/json'}})
+        const json = await response.json();
+        let users = JSON.parse(JSON.stringify(json));
+        //console.log(users[0].Name);
+       // document.getElementById('saved_user').innerHTML = "";
+        document.getElementById('saved_result').innerHTML = 'saved';
+        for (let i = 0; i < users.length; i++) {
+            //console.log(users[i].Name);
+            document.getElementById('saved_user').innerHTML += '<li id='+users[i].Name+'> <a target=_blank href=https://github.com/' + users[i].Name + '>' + users[i].Name + '</a> </li>';
+        }
+    }
+    f();
+
+    async function postData(url = '') {
+        const response = await fetch(url, {
+            //method: 'GET',
+            //method: 'POST', // *GET, POST, PUT, DELETE, etc.
+            //mode: 'cors', // no-cors, *cors, same-origin
+            //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+            //credentials: 'same-origin', // include, *same-origin, omit
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            //redirect: 'follow', // manual, *follow, error
+            //referrer: 'no-referrer', // no-referrer, *client
+            //body: JSON.stringify(data) // body data type must match "Content-Type" header
+        });
+        return await response.json(); // parses JSON response into native JavaScript objects
+    }
+    //search users in github by api rest
+    async function searchData(){
+        document.getElementById('res_search').style.display = 'block';
+        document.getElementById("search_result").style.display = "block";
+        try
+        {
+            const userData = await postData('https://api.github.com/users/' + document.getElementById('input').value);
+            if(userData.message != "Not Found") {
+                let loginName = "<div class='alert alert-primary'>" + userData.login + "</div>";
+                document.getElementById('search_result').innerHTML = loginName;
+
+                // code for repositories
+
+                if(userData.public_repos == 0) {
+                    document.getElementById('search_result').innerHTML +=  "<h3>"+"No Repositories"+"</h3>";
+                }
+                else {
+                    document.getElementById('search_result').innerHTML += "<h3>"+"Repositories"+"</h3>";
+                    let repos =await postData(userData.repos_url);
+
+                    for (i = 0 ; i < repos.length; i++)
+                    {
+                        document.getElementById('search_result').innerHTML +="<li><a target='_blank' href="+repos[i].html_url +">"+ repos[i].full_name +"</a> </li>";
+                    }
+                }
+
+                // code for follower
+
+                if(userData.followers == 0){
+                    document.getElementById('search_result').innerHTML +=  "<h3>"+"No Followers"+"</h3>";
+                }
+                else {
+                    document.getElementById('search_result').innerHTML +=  "<h3>"+"Followers"+"</h3>";
+                    let repos =await postData(userData.followers_url);
+
+                    document.getElementById('search_result').innerHTML += "<ol>";
+
+                    for (i = 0 ; i < repos.length; i++){
+                        document.getElementById('search_result').innerHTML +="<li><a target='_blank' href="+repos[i].html_url +">"+ repos[i].login +"</a> </li>"
+                    }
+                    document.getElementById('search_result').innerHTML += "</ol>"
+                }
+
+
+            }
+            else {
+                let userSearch = "<div class='alert alert-danger' role='alert'>" + "User Not Found" + "</div>";
+                document.getElementById('search_result').innerHTML = userSearch;
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+    }
+
+    //save username and url of users in github and save them in database
+    async function saveData() {
+        try
+        {
+            //
+            const info = await postData('https://api.github.com/users/' + document.getElementById('input').value.toLowerCase());
+            if (info.message != "Not Found")
+            {
+                //console.log(info);
+                const response = await fetch('/users',
+                    { method: 'POST',
+                        body: JSON.stringify({value: document.getElementById('input').value.toLowerCase()}), // data can be `string` or {object}!
+                        headers: { 'Content-Type': 'application/json' }});
+                  const json = await response.json();
+                  //console.log('Success:', JSON.stringify(json));
+                  let user_input = document.getElementById('input').value.toLowerCase();
+                  if(JSON.parse(JSON.stringify(json)).value){
+                      document.getElementById('saved_result').innerHTML = 'saved';
+                      document.getElementById('saved_user').innerHTML += '<li id='+user_input+'> <a target=_blank href=https://github.com/' + user_input + '>' + user_input + '</a> </li>';
+                  }
+                  else {
+                      document.getElementById('saved_result').innerHTML = '<div class=alert alert-danger role=alert>' + 'The user already exists' + '</div>';
+                  }
+            }
+
+            else
+            {
+                document.getElementById('saved_result').innerHTML = '<div class=alert alert-danger role=alert>' + "User Not Found" + '</div>';
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+
+    }
+
+
+    //delete users from our database and delete them from client side
+    async function deleteData() {
+        try {
+            const response = await fetch('/users',
+                { method: 'DELETE',
+                    body: JSON.stringify({value: document.getElementById('input').value.toLowerCase()}), // data can be `string` or {object}!
+                    headers: { 'Content-Type': 'application/json' }});
+            const json = await response.json();
+           // console.log('Success:', JSON.stringify(json));
+            if (JSON.parse(JSON.stringify(json)).value) {
+                document.getElementById('saved_result').innerHTML = 'saved';
+                document.getElementById(document.getElementById('input').value).remove();
+            }
+            else {
+               // console.log(document.getElementById('input').value,"false");
+                let userSaved = '<div class=alert alert-danger role=alert>' + "User Not Found" + '</div>';
+                document.getElementById('saved_result').innerHTML = userSaved;
+            }
+
+        }
+
+        catch (error) {
+            console.error(error);
+        }
+    }
+
+
+
+    //event listener of client
+    document.addEventListener('DOMContentLoaded', function(){
+
+        document.getElementById('search_btn').addEventListener('click',searchData);
+
+        document.getElementById('save_btn').addEventListener('click', saveData);
+
+        document.getElementById('delete_btn').addEventListener('click',deleteData);
+    },false);
+
+
+</script>
+<%- include('footer') -%>

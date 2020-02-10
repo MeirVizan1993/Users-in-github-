@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>README</title>
+</head>
+<body>
+    <h1>ex4</h1>
+
+    <h2>written by :</h2>
+    <h4>Meir Vizan</h4>
+    <h4>ID:302860788</h4>
+    <h4>Joshua Ades</h4>
+    <h4>ID:203077441</h4>
+    <h4>RUN</h4>
+    <p>
+        install:npm install<br>
+        SERVER:npm start<br>
+        URL:locallhost:3000/login<br>
+        Name:admin<br>
+        password:1234
+        firs log in then you get an access for admin.ejs
+    </p>
+    <h4>Design</h4>
+    <p>
+        Folowing the MVC model <br>
+        View folder: all client side files login.ejs,admin.ejs header.ejs and footer.ejs<br>
+        Controlers: routs functions <br>
+        DB: using sqlite the fields are: the names of github who were saved by user.<br>
+
+    </p>
+    <h4>LOGIN</h4>
+    <P>
+           Using cookies and session to save browser id and to recognize if user already loged.<br>
+           Name:admin<br>
+           password:1234
+
+    </P>
+    <H4>ADMIN.ejs</H4>
+  <h5>Search button</h5>
+    <p>    Hard coded url to github and get gits json. <br>
+           When  a name is typed and the name exist, then there is an option to save it including his repo and followers <br>
+    </p>
+
+   <h5> Save button</h5>
+    <p>   When save button is clicked then the name is saved in an array in the level of js client side <br>
+          but also passed to server side by using the main server. App.js. app.js calls to users.js and call to the save function<br>
+          Save function deals with DB sqlite and stores it inn that DB<br>
+    </p>
+    <h5>Delete</h5>
+    <p>   When delete button is clicked on the client side, it deletes the name (a url to the names account in github)<br>
+          From client side and also from server side by interacting  with the main server app.js. app.js calls to users.js and call to the delete function.<br>
+          Delete function deletes the name from DB sqlite<br>
+
+    </p>
+
+
+
+
+
+</body>
+</html>
